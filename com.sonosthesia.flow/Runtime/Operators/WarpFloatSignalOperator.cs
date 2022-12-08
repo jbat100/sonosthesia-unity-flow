@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Sonosthesia.Flow
 {
-    public class WarpFloatSignalOperator : FloatSignalOperator
+    public class WarpFloatSignalOperator : Operator<float>
     {
         [SerializeField] private float _offset;
         
