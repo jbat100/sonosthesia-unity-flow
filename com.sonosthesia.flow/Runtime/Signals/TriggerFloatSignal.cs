@@ -36,7 +36,7 @@ namespace Sonosthesia.Flow
     {
         [SerializeField] private FloatEnvelope _envelope;
         
-        [SerializeField] private AccumulationMode _acumulationMode = AccumulationMode.Max;
+        [SerializeField] private AccumulationMode _accumulationMode = AccumulationMode.Max;
 
         [SerializeField] private float _fade = 1f;
 
@@ -50,7 +50,7 @@ namespace Sonosthesia.Flow
         protected void Update()
         {
             _entries.ExceptWith(_entries.Where(entry => entry.Ended(Time.time)).ToList());
-            Broadcast(_entries.Aggregate(_rest, (current, entry) => entry.Accumulate(Time.time, _acumulationMode, current)));
+            Broadcast(_entries.Aggregate(_rest, (current, entry) => entry.Accumulate(Time.time, _accumulationMode, current)));
         }
         
         private class TriggerEntry
@@ -109,6 +109,6 @@ namespace Sonosthesia.Flow
             }
         }
         
-        private readonly HashSet<TriggerEntry> _entries = new HashSet<TriggerEntry>();
+        private readonly HashSet<TriggerEntry> _entries = new ();
     }
 }

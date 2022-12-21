@@ -9,9 +9,22 @@ namespace Sonosthesia.Flow
         [SerializeField] private Signal<T> _source;
 
         [SerializeField] private float _lerp;
+
+        private readonly struct Point
+        {
+            public readonly T Value;
+            public readonly float Time;
+
+            public Point(T value, float time)
+            {
+                Value = value;
+                Time = time;
+            }
+        }
         
-        private T? _current;
-        private T? _target;
+        private Point _reference;
+        private Point _target;
+        private bool _aligned;
 
         private IDisposable _subscription;
         
@@ -20,26 +33,35 @@ namespace Sonosthesia.Flow
         protected void OnEnable()
         {
             _subscription?.Dispose();
-            if (_source)
+            if (!_source)
             {
-                _subscription = _source.SignalObservable.Subscribe(value => _target = value);
+                return;
             }
+            _reference = _target = new Point(Value, Time.time);
+            _subscription = _source.SignalObservable.Subscribe(value =>
+            {
+                _aligned = false;
+                _reference = new Point(Value, Time.time);
+                _target = new Point(value, Time.time + _lerp);
+            });
         }
 
         protected void OnDisable()
         {
             _subscription?.Dispose();
-            _current = null;
-            _target = null;
         }
         
 
         protected void Update()
         {
-            if (_target.HasValue)
+            if (Time.time >= _target.Time && !_aligned)
             {
-                _current = _current.HasValue ? Lerp(_current.Value, _target.Value, _lerp) : _target.Value;
-                Broadcast(_current.Value);
+                _aligned = true;
+                Broadcast(_target.Value);    
+            }
+            else
+            {
+                Broadcast(Lerp(_reference.Value, _target.Value, (Time.time - _reference.Time) / (_target.Time - _reference.Time)));  
             }
         }
     }
