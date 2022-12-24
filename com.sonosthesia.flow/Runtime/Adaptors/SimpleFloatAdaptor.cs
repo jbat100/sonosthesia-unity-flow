@@ -16,8 +16,7 @@ namespace Sonosthesia.Flow
         {
             return source.SignalObservable.Subscribe(value =>
             {
-                float eased = Mathf.Lerp(0f, 1f, value);
-                TTarget mapped = Map(eased * _scale + _offset);
+                TTarget mapped = Map(value * _scale + _offset);
                 Broadcast(mapped);
             });
         }

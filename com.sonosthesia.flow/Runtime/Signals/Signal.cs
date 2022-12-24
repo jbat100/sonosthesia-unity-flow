@@ -17,7 +17,7 @@ namespace Sonosthesia.Flow
         {
             if (_log)
             {
-                Debug.Log($"{this} {nameof(Broadcast)} unlerped {value}");    
+                Debug.Log($"{this} {nameof(Broadcast)} {value}");    
             }
             _signalSubject.OnNext(value);
         }

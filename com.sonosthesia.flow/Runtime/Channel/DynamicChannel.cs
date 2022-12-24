@@ -14,7 +14,12 @@ namespace Sonosthesia.Flow
 
         private readonly Dictionary<Guid, BehaviorSubject<T>> _ongoingSubjects = new ();
 
-        private readonly CompositeDisposable _logSubscriptions = new (); 
+        private readonly CompositeDisposable _logSubscriptions = new ();
+
+        protected virtual void Awake()
+        {
+            
+        }
         
         protected virtual void OnEnable()
         {
