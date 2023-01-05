@@ -5,25 +5,6 @@ using UnityEngine;
 
 namespace Sonosthesia.Flow
 {
-#if UNITY_EDITOR
-    using UnityEditor;
-
-    [CustomEditor(typeof(TriggerFloatSignal))]
-    public class TriggerFloatSignalEditor : Editor
-    {
-        public override void OnInspectorGUI()
-        {
-            DrawDefaultInspector();
-
-            TriggerFloatSignal signal = (TriggerFloatSignal)target;
-            if(GUILayout.Button("Trigger"))
-            {
-                signal.Trigger(1f);
-            }
-        }
-    }
-#endif
-    
     public enum AccumulationMode
     {
         None,
@@ -38,67 +19,40 @@ namespace Sonosthesia.Flow
         
         [SerializeField] private AccumulationMode _accumulationMode = AccumulationMode.Max;
 
-        [SerializeField] private float _fade = 1f;
-
-        [SerializeField] private float _rest;
-        
-        public void Trigger(float scale)
+        public void Trigger(float valueScale, float timeScale)
         {
-            _entries.Add(new TriggerEntry(Time.time, scale, _fade, _envelope));
+            _entries.Add(new TriggerEntry(Time.time, valueScale, timeScale, _envelope));
         }
         
         protected void Update()
         {
             _entries.ExceptWith(_entries.Where(entry => entry.Ended(Time.time)).ToList());
-            Broadcast(_entries.Aggregate(_rest, (current, entry) => entry.Accumulate(Time.time, _accumulationMode, current)));
+            Broadcast(_entries.Aggregate(0f, (current, entry) => entry.Accumulate(Time.time, _accumulationMode, current)));
         }
         
         private class TriggerEntry
         {
             private float _startTime;
-            private float _scale;
-            private float _fade;
+            private float _valueScale;
+            private float _timeScale;
             private FloatEnvelope _envelope;
             private float _fadeTime;
             private float _endTime;
             
-            public TriggerEntry(float startTime, float scale, float fade, FloatEnvelope envelope)
+            public TriggerEntry(float startTime, float valueScale, float timeScale, FloatEnvelope envelope)
             {
                 _startTime = startTime;
-                _scale = scale;
-                _fade = fade;
+                _valueScale = valueScale;
+                _timeScale = timeScale;
                 _envelope = envelope;
-                _fadeTime = _startTime + envelope.Duration();
-                _endTime = _fadeTime + envelope.End() * _fade;
+                _endTime = envelope.Duration() * timeScale;
             }
 
             public bool Ended(float time) => time > _endTime;
 
-            /// <summary>
-            /// 
-            /// </summary>
-            /// <param name="time">Absolute unity time</param>
-            /// <returns></returns>
-            public float GetValue(float time)
-            {
-                if (time > _endTime)
-                {
-                    return 0f;
-                }
-                
-                float result = _envelope.Evaluate(time - _startTime);
-
-                if (time > _fadeTime)
-                {
-                    result *= (_fadeTime - time) / (_endTime - _fadeTime);
-                }
-
-                return result;
-            }
-
             public float Accumulate(float time, AccumulationMode accumulationMode, float current)
             {
-                float value = GetValue(time);
+                float value = _valueScale * _envelope.Evaluate((time - _startTime) / _timeScale);;
                 return accumulationMode switch
                 {
                     AccumulationMode.Sum => current + value,

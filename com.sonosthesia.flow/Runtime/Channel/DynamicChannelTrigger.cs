@@ -10,8 +10,10 @@ namespace Sonosthesia.Flow
 
         [SerializeField] private DynamicChannel<T> _channel;
 
-        [SerializeField] private Selector<T> _scaleSelector;
+        [SerializeField] private Selector<T> _valueSelector;
 
+        [SerializeField] private Selector<T> _timeSelector;
+        
         private IDisposable _subscription;
     
         protected void OnEnable()
@@ -21,13 +23,11 @@ namespace Sonosthesia.Flow
                 .SelectMany(stream => stream.First())
                 .Subscribe(note =>
                 {
-                    float scale = _scaleSelector.Select(note);
-                    _triggerFloatSignal.Trigger(scale);
+                    _triggerFloatSignal.Trigger(_valueSelector.Select(note), _timeSelector.Select(note));
                 });
         }
 
         protected void OnDisable() => _subscription?.Dispose();
-
     }
 }
 
